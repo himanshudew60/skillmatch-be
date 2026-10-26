@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
-    // List users with employee, department and role names.
+    /**
+     * List all active users.
+     */
     public function index()
     {
         $users = DB::table('users as u')
@@ -27,8 +29,10 @@ class UserController extends Controller
                 'e.emp_email',
                 'd.name as department_name',
                 'r.name as role_name',
+                'u.created_at',
+                'u.updated_at',
             ])
-            ->orderBy('u.id', 'desc')
+            ->orderByDesc('u.id')
             ->get();
 
         return response()->json([
@@ -37,7 +41,10 @@ class UserController extends Controller
         ]);
     }
 
-    // Employees available for user-account creation.
+
+    /**
+     * Get available employees for creating a user account.
+     */
     public function getAvailableEmployees(Request $request)
     {
         $search = trim($request->query('search', ''));
@@ -66,7 +73,6 @@ class UserController extends Controller
                 'd.name as department_name',
             ])
             ->orderBy('e.emp_name')
-            ->limit(50)
             ->get();
 
         return response()->json([
@@ -75,7 +81,10 @@ class UserController extends Controller
         ]);
     }
 
-    // Fetch available roles.
+
+    /**
+     * Get all active roles.
+     */
     public function getRoles()
     {
         $roles = DB::table('roles')
@@ -90,13 +99,16 @@ class UserController extends Controller
         ]);
     }
 
-    // Create a login account for an employee.
+
+    /**
+     * Create a new user account.
+     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'employee_id' => 'required|integer|exists:employees,id',
-            'role_id' => 'required|integer|exists:roles,id',
-            'user_id' => 'required|string|max:255|unique:users,user_id',
+            'employee_id' => 'required|integer',
+            'role_id' => 'required|integer',
+            'user_id' => 'required|string|max:255',
             'password' => 'required|string|min:8',
         ]);
 
@@ -108,25 +120,46 @@ class UserController extends Controller
             ], 422);
         }
 
-        // Only active employees and roles can be assigned.
+        // Check employee
         $employee = DB::table('employees')
             ->where('id', $request->employee_id)
             ->where('bit_delete', 0)
             ->first();
 
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Selected employee is unavailable.',
+            ], 422);
+        }
+
+        // Check role
         $role = DB::table('roles')
             ->where('id', $request->role_id)
             ->where('bit_delete', 0)
             ->first();
 
-        if (!$employee || !$role) {
+        if (!$role) {
             return response()->json([
                 'success' => false,
-                'message' => 'The selected employee or role is unavailable.',
+                'message' => 'Selected role is unavailable.',
             ], 422);
         }
 
-        // Prevent duplicate accounts for the same employee.
+        // Check duplicate user ID among active users
+        $userIdExists = DB::table('users')
+            ->where('user_id', $request->user_id)
+            ->where('bit_delete', 0)
+            ->exists();
+
+        if ($userIdExists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This User ID is already in use.',
+            ], 422);
+        }
+
+        // Check employee already has an active account
         $alreadyAssigned = DB::table('users')
             ->where('employee_id', $request->employee_id)
             ->where('bit_delete', 0)
@@ -152,7 +185,195 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'User account created successfully.',
-            'data' => ['id' => $id],
+            'data' => [
+                'id' => $id,
+            ],
         ], 201);
+    }
+
+
+    /**
+     * Show one user.
+     */
+    public function show($id)
+    {
+        $user = DB::table('users as u')
+            ->leftJoin('employees as e', 'u.employee_id', '=', 'e.id')
+            ->leftJoin('departments as d', 'e.department_id', '=', 'd.id')
+            ->leftJoin('roles as r', 'u.role_id', '=', 'r.id')
+            ->where('u.id', $id)
+            ->where('u.bit_delete', 0)
+            ->select([
+                'u.id',
+                'u.user_id',
+                'u.employee_id',
+                'u.role_id',
+                'e.emp_code',
+                'e.emp_name',
+                'e.emp_email',
+                'd.name as department_name',
+                'r.name as role_name',
+                'u.created_at',
+                'u.updated_at',
+            ])
+            ->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $user,
+        ]);
+    }
+
+
+    /**
+     * Update an existing user.
+     *
+     * Employee can be changed.
+     * Role can be changed.
+     * User ID can be changed.
+     * Password is optional.
+     */
+    public function update(Request $request, $id)
+    {
+        $user = DB::table('users')
+            ->where('id', $id)
+            ->where('bit_delete', 0)
+            ->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found.',
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'employee_id' => 'required|integer',
+            'role_id' => 'required|integer',
+            'user_id' => 'required|string|max:255',
+            'password' => 'nullable|string|min:8',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please correct the submitted information.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Check employee
+        $employee = DB::table('employees')
+            ->where('id', $request->employee_id)
+            ->where('bit_delete', 0)
+            ->first();
+
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Selected employee is unavailable.',
+            ], 422);
+        }
+
+        // Check role
+        $role = DB::table('roles')
+            ->where('id', $request->role_id)
+            ->where('bit_delete', 0)
+            ->first();
+
+        if (!$role) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Selected role is unavailable.',
+            ], 422);
+        }
+
+        // Check duplicate User ID excluding current user
+        $userIdExists = DB::table('users')
+            ->where('user_id', $request->user_id)
+            ->where('id', '!=', $id)
+            ->where('bit_delete', 0)
+            ->exists();
+
+        if ($userIdExists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This User ID is already in use.',
+            ], 422);
+        }
+
+        // Check whether another active user already belongs to
+        // the selected employee.
+        $employeeAlreadyAssigned = DB::table('users')
+            ->where('employee_id', $request->employee_id)
+            ->where('id', '!=', $id)
+            ->where('bit_delete', 0)
+            ->exists();
+
+        if ($employeeAlreadyAssigned) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This employee already has another user account.',
+            ], 422);
+        }
+
+        $updateData = [
+            'employee_id' => $request->employee_id,
+            'user_id' => $request->user_id,
+            'role_id' => $request->role_id,
+            'updated_at' => now(),
+        ];
+
+        // Only update password if a new password was provided.
+        if ($request->filled('password')) {
+            $updateData['password'] = Hash::make($request->password);
+        }
+
+        DB::table('users')
+            ->where('id', $id)
+            ->update($updateData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User account updated successfully.',
+        ]);
+    }
+
+
+    /**
+     * Soft delete a user.
+     */
+    public function destroy($id)
+    {
+        $user = DB::table('users')
+            ->where('id', $id)
+            ->where('bit_delete', 0)
+            ->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found.',
+            ], 404);
+        }
+
+        DB::table('users')
+            ->where('id', $id)
+            ->update([
+                'bit_delete' => 1,
+                'updated_at' => now(),
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User account deleted successfully.',
+        ]);
     }
 }

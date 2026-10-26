@@ -9,25 +9,27 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('project_requirements', function (Blueprint $table) {
-            $table->id();
+    $table->id();
 
-            $table->unsignedBigInteger('project_id');
-            $table->unsignedBigInteger('skill_id');
+    $table->unsignedBigInteger('project_id');
 
-            $table->decimal('required_proficiency', 2, 1)->default(1.0);
+    $table->integer('required_resources')->default(1);
 
-            $table->integer('required_experience')->default(0);
+    $table->unsignedBigInteger('primary_skill_id')->nullable();
+    $table->decimal('primary_proficiency', 2, 1)->nullable();
 
-            $table->integer('required_resources')->default(1);
+    $table->unsignedBigInteger('secondary_skill_id')->nullable();
+    $table->decimal('secondary_proficiency', 2, 1)->nullable();
 
-            $table->string('priority')->default('Medium');
+    $table->unsignedBigInteger('tertiary_skill_id')->nullable();
+    $table->decimal('tertiary_proficiency', 2, 1)->nullable();
 
-            $table->text('requirement_description')->nullable();
+    $table->text('requirement_description')->nullable();
 
-            $table->tinyInteger('bit_delete')->default(0);
+    $table->tinyInteger('bit_delete')->default(0);
 
-            $table->timestamps();
-        });
+    $table->timestamps();
+});
     }
 
     public function down(): void
