@@ -4,8 +4,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\LKController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectRequirementController;
+use App\Http\Controllers\ResourceManagerController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -105,4 +107,51 @@ Route::post('/designations', [DesignationController::class, 'store']);
 Route::get('/designations/{id}', [DesignationController::class, 'show']);
 Route::put('/designations/{id}', [DesignationController::class, 'update']);
 Route::delete('/designations/{id}', [DesignationController::class, 'destroy']);
+
+
+// L&K
+
+
+Route::get('/lk/employees', [LKController::class, 'employees']);
+
+Route::get('/lk/employees/{employeeId}/skills', [
+    LKController::class,
+    'employeeSkills'
+]);
+
+Route::post('/lk/skill-assessments', [
+    LKController::class,
+    'submitAssessment'
+]);
+
+Route::get('/lk/upskill-requests', [
+    LKController::class,
+    'upskillRequests'
+]);
+
+// ADD THIS POST ROUTE
+Route::post('/lk/upskill-requests', [
+    LKController::class,
+    'sendToUpskill'
+]);
+
+Route::get('/lk/upskill-requests/{id}', [
+    LKController::class,
+    'upskillRequest'
+]);
+
+Route::post('/lk/upskill-requests/{id}/assessment', [
+    LKController::class,
+    'submitUpskillAssessment'
+]);
+
+// reseourcemanger
+Route::get(
+    '/resource-manager/requirements/{id}/recommendations',
+    [ResourceManagerController::class, 'recommendations']
+);
+Route::post(
+    '/resource-manager/upskill-requests',
+    [ResourceManagerController::class, 'sendUpskillRequest']
+);
 });
