@@ -11,6 +11,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "^3.1",
+        "openai-php/laravel": "^0.21.0",
         "tymon/jwt-auth": "^2.3"
     },
     "require-dev": {

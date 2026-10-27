@@ -133,7 +133,6 @@ class LKController extends Controller
         'es.skill_type',
         'es.proficiency',
         'es.experience',
-        'es.assessment_score',
         'es.certification',
         'es.project_experience',
         'es.skill_validation_status'
@@ -214,9 +213,7 @@ class LKController extends Controller
                 ? $employeeSkill->proficiency
                 : null;
 
-            $employeeScore = $employeeSkill
-                ? $employeeSkill->assessment_score
-                : null;
+            $employeeScore =  null;
 
             /*
             |--------------------------------------------------------------------------
@@ -615,9 +612,6 @@ public function sendToUpskill(Request $request)
         $id
     ) {
         $validated = $request->validate([
-            'assessment_score' =>
-                'required|numeric|min:0|max:100',
-
             'proficiency' =>
                 'required|numeric|min:1|max:5',
 
@@ -685,8 +679,6 @@ public function sendToUpskill(Request $request)
                         'proficiency' =>
                             $validated['proficiency'],
 
-                        'assessment_score' =>
-                            $validated['assessment_score'],
 
                         'skill_validation_status' =>
                             'Assessment',
@@ -732,8 +724,7 @@ public function sendToUpskill(Request $request)
                         'experience' =>
                             0,
 
-                        'assessment_score' =>
-                            $validated['assessment_score'],
+                    
 
                         'certification' =>
                             null,

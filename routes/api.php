@@ -145,13 +145,22 @@ Route::post('/lk/upskill-requests/{id}/assessment', [
     'submitUpskillAssessment'
 ]);
 
-// reseourcemanger
-Route::get(
-    '/resource-manager/requirements/{id}/recommendations',
-    [ResourceManagerController::class, 'recommendations']
-);
+
 Route::post(
     '/resource-manager/upskill-requests',
     [ResourceManagerController::class, 'sendUpskillRequest']
 );
+Route::get(
+        '/resource-manager/requirements/{id}/recommendations',
+        [ResourceManagerController::class, 'recommendations']
+    );
+
+    Route::post(
+        '/resource-manager/requirements/{id}/ai-recommendations',
+        [ResourceManagerController::class, 'aiRecommendations']
+    );
+    Route::post(
+        '/resource-manager/reviedByManager/{id}',
+        [ResourceManagerController::class, 'reviedByManager']
+    );
 });

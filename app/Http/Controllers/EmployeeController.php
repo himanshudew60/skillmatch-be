@@ -194,7 +194,7 @@ public function store(Request $request)
                     'experience_months' => $skill['experience_months'] ?? null,
                     'certification' => $skill['certification'] ?? null,
                     'project_experience_months' => $skill['project_experience_months'] ?? null,
-                    'skill_validation_status' => $skill['skill_validation_status'],
+                    'skill_validation_status' => 'Self',
                     'bit_delete' => 0,
                 ]);
             }

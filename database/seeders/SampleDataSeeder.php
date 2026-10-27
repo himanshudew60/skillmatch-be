@@ -51,7 +51,6 @@ class SampleDataSeeder extends Seeder
             ],
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | Designations
@@ -100,7 +99,6 @@ class SampleDataSeeder extends Seeder
                 'updated_at' => now(),
             ],
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -158,7 +156,6 @@ class SampleDataSeeder extends Seeder
                 'updated_at' => now(),
             ],
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -249,10 +246,13 @@ class SampleDataSeeder extends Seeder
             ],
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | Employees
+        |--------------------------------------------------------------------------
+        |
+        | All employees start as Available.
+        | Resource allocation changes happen later in the workflow.
         |--------------------------------------------------------------------------
         */
 
@@ -293,8 +293,8 @@ class SampleDataSeeder extends Seeder
                 'department_id' => 1,
                 'designation_id' => 1,
                 'location' => 'Ahmedabad',
-                'resource_status' => 2,
-                'available_from' => '2026-11-01',
+                'resource_status' => 0,
+                'available_from' => null,
                 'bit_delete' => 0,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -321,8 +321,8 @@ class SampleDataSeeder extends Seeder
                 'department_id' => 1,
                 'designation_id' => 2,
                 'location' => 'Mumbai',
-                'resource_status' => 1,
-                'available_from' => '2026-12-15',
+                'resource_status' => 0,
+                'available_from' => null,
                 'bit_delete' => 0,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -371,317 +371,279 @@ class SampleDataSeeder extends Seeder
             ],
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | Employee Skills
         |--------------------------------------------------------------------------
         |
-        | Employee 1 = Strong Laravel/PHP developer
-        | Employee 2 = Strong Angular/Frontend developer
-        | Employee 3 = Full stack developer
-        | Employee 4 = PHP/MySQL developer
-        | Employee 5 = Backend developer
-        | Employee 6 = Angular/TypeScript developer
+        | All skills start with Self validation.
+        | L&K assessment is performed later.
         |--------------------------------------------------------------------------
         */
+/*
+|--------------------------------------------------------------------------
+| Employee Skills
+|--------------------------------------------------------------------------
+|
+| Rules:
+| - Minimum 1 skill per employee
+| - Maximum 3 skills per employee
+| - Maximum 1 Primary skill
+| - Maximum 1 Secondary skill
+| - Maximum 1 Tertiary skill
+| - All skills start with Self validation
+| - No employee assessment score is stored here
+|--------------------------------------------------------------------------
+*/
 
-        DB::table('employee_skills')->insert([
+DB::table('employee_skills')->insert([
 
-            // Rahul - PHP/Laravel full stack
-            [
-                'employee_id' => 1,
-                'skill_id' => 1,
-                'skill_type' => 'Primary',
-                'proficiency' => 5.0,
-                'experience' => 60,
-                'assessment_score' => 92.00,
-                'certification' => 'PHP Certified Developer',
-                'project_experience' => 54,
-                'skill_validation_status' => 'Assessment',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'employee_id' => 1,
-                'skill_id' => 2,
-                'skill_type' => 'Primary',
-                'proficiency' => 5.0,
-                'experience' => 48,
-                'assessment_score' => 94.00,
-                'certification' => 'Laravel Certification',
-                'project_experience' => 42,
-                'skill_validation_status' => 'Manager',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'employee_id' => 1,
-                'skill_id' => 3,
-                'skill_type' => 'Secondary',
-                'proficiency' => 4.0,
-                'experience' => 36,
-                'assessment_score' => 86.00,
-                'certification' => null,
-                'project_experience' => 30,
-                'skill_validation_status' => 'Manager',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'employee_id' => 1,
-                'skill_id' => 4,
-                'skill_type' => 'Secondary',
-                'proficiency' => 4.0,
-                'experience' => 42,
-                'assessment_score' => 88.00,
-                'certification' => null,
-                'project_experience' => 36,
-                'skill_validation_status' => 'Assessment',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+    // Rahul - PHP / Laravel / Angular
+    [
+        'employee_id' => 1,
+        'skill_id' => 1,
+        'skill_type' => 'Primary',
+        'proficiency' => 5.0,
+        'experience' => 60,
+        'certification' => 'PHP Certified Developer',
+        'project_experience' => 54,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
+    [
+        'employee_id' => 1,
+        'skill_id' => 2,
+        'skill_type' => 'Secondary',
+        'proficiency' => 5.0,
+        'experience' => 48,
+        'certification' => 'Laravel Certification',
+        'project_experience' => 42,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
+    [
+        'employee_id' => 1,
+        'skill_id' => 3,
+        'skill_type' => 'Tertiary',
+        'proficiency' => 4.0,
+        'experience' => 36,
+        'certification' => null,
+        'project_experience' => 30,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
 
-            // Priya - Angular specialist
-            [
-                'employee_id' => 2,
-                'skill_id' => 3,
-                'skill_type' => 'Primary',
-                'proficiency' => 5.0,
-                'experience' => 54,
-                'assessment_score' => 95.00,
-                'certification' => 'Angular Certification',
-                'project_experience' => 48,
-                'skill_validation_status' => 'Assessment',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'employee_id' => 2,
-                'skill_id' => 6,
-                'skill_type' => 'Primary',
-                'proficiency' => 5.0,
-                'experience' => 48,
-                'assessment_score' => 93.00,
-                'certification' => null,
-                'project_experience' => 42,
-                'skill_validation_status' => 'Manager',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'employee_id' => 2,
-                'skill_id' => 5,
-                'skill_type' => 'Secondary',
-                'proficiency' => 4.0,
-                'experience' => 48,
-                'assessment_score' => 89.00,
-                'certification' => null,
-                'project_experience' => 40,
-                'skill_validation_status' => 'Manager',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'employee_id' => 2,
-                'skill_id' => 4,
-                'skill_type' => 'Tertiary',
-                'proficiency' => 3.0,
-                'experience' => 24,
-                'assessment_score' => 78.00,
-                'certification' => null,
-                'project_experience' => 18,
-                'skill_validation_status' => 'Self',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+    // Priya - Angular / TypeScript / JavaScript
+    [
+        'employee_id' => 2,
+        'skill_id' => 3,
+        'skill_type' => 'Primary',
+        'proficiency' => 5.0,
+        'experience' => 54,
+        'certification' => 'Angular Certification',
+        'project_experience' => 48,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
+    [
+        'employee_id' => 2,
+        'skill_id' => 6,
+        'skill_type' => 'Secondary',
+        'proficiency' => 5.0,
+        'experience' => 48,
+        'certification' => null,
+        'project_experience' => 42,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
+    [
+        'employee_id' => 2,
+        'skill_id' => 5,
+        'skill_type' => 'Tertiary',
+        'proficiency' => 4.0,
+        'experience' => 48,
+        'certification' => null,
+        'project_experience' => 40,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
 
-            // Amit - Full Stack
-            [
-                'employee_id' => 3,
-                'skill_id' => 1,
-                'skill_type' => 'Primary',
-                'proficiency' => 4.0,
-                'experience' => 48,
-                'assessment_score' => 88.00,
-                'certification' => null,
-                'project_experience' => 42,
-                'skill_validation_status' => 'Manager',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'employee_id' => 3,
-                'skill_id' => 3,
-                'skill_type' => 'Secondary',
-                'proficiency' => 4.0,
-                'experience' => 36,
-                'assessment_score' => 86.00,
-                'certification' => null,
-                'project_experience' => 30,
-                'skill_validation_status' => 'Manager',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'employee_id' => 3,
-                'skill_id' => 4,
-                'skill_type' => 'Secondary',
-                'proficiency' => 4.0,
-                'experience' => 42,
-                'assessment_score' => 87.00,
-                'certification' => null,
-                'project_experience' => 36,
-                'skill_validation_status' => 'Assessment',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+    // Amit - PHP / Angular / MySQL
+    [
+        'employee_id' => 3,
+        'skill_id' => 1,
+        'skill_type' => 'Primary',
+        'proficiency' => 5.0,
+        'experience' => 48,
+        'certification' => null,
+        'project_experience' => 42,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
+    [
+        'employee_id' => 3,
+        'skill_id' => 3,
+        'skill_type' => 'Secondary',
+        'proficiency' => 4.0,
+        'experience' => 36,
+        'certification' => null,
+        'project_experience' => 30,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
+    [
+        'employee_id' => 3,
+        'skill_id' => 4,
+        'skill_type' => 'Tertiary',
+        'proficiency' => 4.0,
+        'experience' => 42,
+        'certification' => null,
+        'project_experience' => 36,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
 
-            // Neha - PHP/MySQL
-            [
-                'employee_id' => 4,
-                'skill_id' => 1,
-                'skill_type' => 'Primary',
-                'proficiency' => 5.0,
-                'experience' => 72,
-                'assessment_score' => 96.00,
-                'certification' => 'PHP Certified Developer',
-                'project_experience' => 60,
-                'skill_validation_status' => 'Assessment',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'employee_id' => 4,
-                'skill_id' => 4,
-                'skill_type' => 'Secondary',
-                'proficiency' => 5.0,
-                'experience' => 60,
-                'assessment_score' => 94.00,
-                'certification' => 'MySQL Certification',
-                'project_experience' => 54,
-                'skill_validation_status' => 'Manager',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'employee_id' => 4,
-                'skill_id' => 2,
-                'skill_type' => 'Secondary',
-                'proficiency' => 4.0,
-                'experience' => 48,
-                'assessment_score' => 87.00,
-                'certification' => null,
-                'project_experience' => 42,
-                'skill_validation_status' => 'Manager',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+    // Neha - PHP / MySQL / Laravel
+    [
+        'employee_id' => 4,
+        'skill_id' => 1,
+        'skill_type' => 'Primary',
+        'proficiency' => 5.0,
+        'experience' => 72,
+        'certification' => 'PHP Certified Developer',
+        'project_experience' => 60,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
+    [
+        'employee_id' => 4,
+        'skill_id' => 4,
+        'skill_type' => 'Secondary',
+        'proficiency' => 5.0,
+        'experience' => 60,
+        'certification' => 'MySQL Certification',
+        'project_experience' => 54,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
+    [
+        'employee_id' => 4,
+        'skill_id' => 2,
+        'skill_type' => 'Tertiary',
+        'proficiency' => 4.0,
+        'experience' => 48,
+        'certification' => null,
+        'project_experience' => 42,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
 
-            // Vikram - Backend
-            [
-                'employee_id' => 5,
-                'skill_id' => 2,
-                'skill_type' => 'Primary',
-                'proficiency' => 5.0,
-                'experience' => 66,
-                'assessment_score' => 95.00,
-                'certification' => 'Laravel Certification',
-                'project_experience' => 60,
-                'skill_validation_status' => 'Assessment',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'employee_id' => 5,
-                'skill_id' => 1,
-                'skill_type' => 'Primary',
-                'proficiency' => 4.0,
-                'experience' => 60,
-                'assessment_score' => 90.00,
-                'certification' => null,
-                'project_experience' => 54,
-                'skill_validation_status' => 'Manager',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'employee_id' => 5,
-                'skill_id' => 4,
-                'skill_type' => 'Secondary',
-                'proficiency' => 4.0,
-                'experience' => 48,
-                'assessment_score' => 86.00,
-                'certification' => null,
-                'project_experience' => 42,
-                'skill_validation_status' => 'Manager',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+    // Vikram - Laravel / PHP / MySQL
+    [
+        'employee_id' => 5,
+        'skill_id' => 2,
+        'skill_type' => 'Primary',
+        'proficiency' => 5.0,
+        'experience' => 66,
+        'certification' => 'Laravel Certification',
+        'project_experience' => 60,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
+    [
+        'employee_id' => 5,
+        'skill_id' => 1,
+        'skill_type' => 'Secondary',
+        'proficiency' => 4.0,
+        'experience' => 60,
+        'certification' => null,
+        'project_experience' => 54,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
+    [
+        'employee_id' => 5,
+        'skill_id' => 4,
+        'skill_type' => 'Tertiary',
+        'proficiency' => 4.0,
+        'experience' => 48,
+        'certification' => null,
+        'project_experience' => 42,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
 
-            // Sneha - Angular
-            [
-                'employee_id' => 6,
-                'skill_id' => 3,
-                'skill_type' => 'Primary',
-                'proficiency' => 4.0,
-                'experience' => 42,
-                'assessment_score' => 88.00,
-                'certification' => null,
-                'project_experience' => 36,
-                'skill_validation_status' => 'Manager',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'employee_id' => 6,
-                'skill_id' => 6,
-                'skill_type' => 'Secondary',
-                'proficiency' => 4.0,
-                'experience' => 36,
-                'assessment_score' => 87.00,
-                'certification' => null,
-                'project_experience' => 30,
-                'skill_validation_status' => 'Assessment',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'employee_id' => 6,
-                'skill_id' => 5,
-                'skill_type' => 'Tertiary',
-                'proficiency' => 4.0,
-                'experience' => 30,
-                'assessment_score' => 85.00,
-                'certification' => null,
-                'project_experience' => 24,
-                'skill_validation_status' => 'Manager',
-                'bit_delete' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
-
-
+    // Sneha - Angular / TypeScript / JavaScript
+    [
+        'employee_id' => 6,
+        'skill_id' => 3,
+        'skill_type' => 'Primary',
+        'proficiency' => 4.0,
+        'experience' => 42,
+        'certification' => null,
+        'project_experience' => 36,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
+    [
+        'employee_id' => 6,
+        'skill_id' => 6,
+        'skill_type' => 'Secondary',
+        'proficiency' => 4.0,
+        'experience' => 36,
+        'certification' => null,
+        'project_experience' => 30,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
+    [
+        'employee_id' => 6,
+        'skill_id' => 5,
+        'skill_type' => 'Tertiary',
+        'proficiency' => 4.0,
+        'experience' => 30,
+        'certification' => null,
+        'project_experience' => 24,
+        'skill_validation_status' => 'Self',
+        'bit_delete' => 0,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ],
+]);
         /*
         |--------------------------------------------------------------------------
         | Projects
@@ -736,7 +698,6 @@ class SampleDataSeeder extends Seeder
             ],
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | Project Requirements
@@ -753,9 +714,7 @@ class SampleDataSeeder extends Seeder
         DB::table('project_requirements')->insert([
             [
                 'id' => 1,
-
                 'project_id' => 1,
-
                 'required_resources' => 4,
 
                 'primary_skill_id' => 1,
@@ -771,16 +730,12 @@ class SampleDataSeeder extends Seeder
                     'IWWMS requires four resources with strong PHP skills, Angular as a secondary skill and MySQL as a tertiary skill.',
 
                 'bit_delete' => 0,
-
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-
             [
                 'id' => 2,
-
                 'project_id' => 2,
-
                 'required_resources' => 2,
 
                 'primary_skill_id' => 3,
@@ -796,16 +751,12 @@ class SampleDataSeeder extends Seeder
                     'HR Portal requires Angular developers with strong TypeScript and basic MySQL knowledge.',
 
                 'bit_delete' => 0,
-
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-
             [
                 'id' => 3,
-
                 'project_id' => 3,
-
                 'required_resources' => 2,
 
                 'primary_skill_id' => 4,
@@ -821,12 +772,10 @@ class SampleDataSeeder extends Seeder
                     'Finance Dashboard requires MySQL as the primary skill with Angular and JavaScript as supporting skills.',
 
                 'bit_delete' => 0,
-
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
         ]);
-
 
         /*
         |--------------------------------------------------------------------------

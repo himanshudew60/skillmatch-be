@@ -20,7 +20,7 @@ return new class extends Migration
             $table->enum('skill_type', ['Primary','Secondary','Tertiary']);
             $table->decimal('proficiency',2,1)->comment('Proficiency level from 1 to 5');
             $table->unsignedSmallInteger('experience')->nullable()->comment('Experience in months');
-            $table->decimal('assessment_score', 5, 2)->nullable();
+           
             $table->string('certification', 255)->nullable();
             $table->unsignedSmallInteger('project_experience')->nullable()->comment('Experience in total months');
             $table->enum('skill_validation_status', ['Self','Manager','Assessment'])->nullable();
