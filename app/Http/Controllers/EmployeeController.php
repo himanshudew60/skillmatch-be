@@ -270,7 +270,7 @@ public function store(Request $request)
             'es.skill_type',
             'es.proficiency',
             'es.experience',
-            'es.assessment_score',
+           
             'es.certification',
             'es.project_experience',
             'es.skill_validation_status',
@@ -318,7 +318,7 @@ public function update(Request $request, $id)
         'skills.*.skill_type' => 'required|in:Primary,Secondary,Tertiary',
         'skills.*.proficiency' => 'nullable|numeric|min:1|max:5',
         'skills.*.experience_months' => 'nullable|integer|min:0',
-        'skills.*.assessment_score' => 'nullable|numeric|min:0|max:100',
+
         'skills.*.certification' => 'nullable|string|max:255',
         'skills.*.project_experience_months' => 'nullable|integer|min:0',
         'skills.*.skill_validation_status' => 'required|in:Self,Manager,Assessment',
@@ -375,8 +375,7 @@ public function update(Request $request, $id)
             ];
 
             // Keep this only if the database has this column.
-            $skillData['assessment_score'] =
-                $skill['assessment_score'] ?? null;
+    
 
             if ($existingSkill) {
                 $existingSkill->update($skillData);

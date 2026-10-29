@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Log;
 class LKController extends Controller
 {
     /*
@@ -25,31 +25,31 @@ class LKController extends Controller
         ->where('e.status', 1)
 
         // Show employees who still have at least one skill to review.
-        ->whereExists(function ($query) {
-            $query->select(DB::raw(1))
-                ->from('employee_skills as es')
-                ->whereColumn('es.employee_id', 'e.id')
-                ->where('es.bit_delete', 0)
+        // ->whereExists(function ($query) {
+        //     $query->select(DB::raw(1))
+        //         ->from('employee_skills as es')
+        //         ->whereColumn('es.employee_id', 'e.id')
+        //         ->where('es.bit_delete', 0)
 
-                // The skill must not have a latest Approved assessment.
-                ->whereNotExists(function ($assessment) {
-                    $assessment->select(DB::raw(1))
-                        ->from('lk_skill_assessments as lsa')
-                        ->whereColumn(
-                            'lsa.employee_skill_id',
-                            'es.id'
-                        )
-                        ->whereRaw('
-                            lsa.id = (
-                                SELECT MAX(lsa2.id)
-                                FROM lk_skill_assessments AS lsa2
-                                WHERE lsa2.employee_skill_id =
-                                      es.id
-                            )
-                        ')
-                        ->where('lsa.decision', 'Approved');
-                });
-        })
+        //         // The skill must not have a latest Approved assessment.
+        //         ->whereNotExists(function ($assessment) {
+        //             $assessment->select(DB::raw(1))
+        //                 ->from('lk_skill_assessments as lsa')
+        //                 ->whereColumn(
+        //                     'lsa.employee_skill_id',
+        //                     'es.id'
+        //                 )
+        //                 ->whereRaw('
+        //                     lsa.id = (
+        //                         SELECT MAX(lsa2.id)
+        //                         FROM lk_skill_assessments AS lsa2
+        //                         WHERE lsa2.employee_skill_id =
+        //                               es.id
+        //                     )
+        //                 ')
+        //                 ->where('lsa.decision', 'Approved');
+        //         });
+        // })
 
         ->select(
             'e.id',
@@ -77,6 +77,8 @@ class LKController extends Controller
     $employees = $query
         ->orderBy('e.emp_name')
         ->get();
+
+       Log::info('Employees:', $employees->toArray());
 
     return response()->json([
         'success' => true,

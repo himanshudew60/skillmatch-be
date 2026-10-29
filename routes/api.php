@@ -231,6 +231,6 @@ Route::post(
 
 
 // ai COntorller
-Route::get('/ai/overview', [AIController::class, 'overview']);
+Route::get('/ai/dash', [AIController::class, 'dash']);
 Route::post('/ai/chat', [AIController::class, 'chat']);
 });
