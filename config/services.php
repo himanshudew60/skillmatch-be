@@ -13,6 +13,19 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
+    'groq' => [
+    'key' => env('GROQ_API_KEY'),
+    'model' => env('GROQ_MODEL', 'openai/gpt-oss-20b'),
+],
+    'gemini' => [
+    'key' => env('GEMINI_API_KEY'),
+    'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+],
+'openai' => [
+    'key' => env('OPENAI_API_KEY'),
+    'organization' => env('OPENAI_ORGANIZATION'),
+    'model' => env('OPENAI_MODEL', 'gpt-5'),
+],
 
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),

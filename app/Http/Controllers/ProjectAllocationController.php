@@ -619,7 +619,7 @@ public function bulkRelease(Request $request, $projectId)
                         ->where('id', $employeeId)
                         ->where('status', 5)
                         ->update([
-                            'status' => 4,
+                            'status' => 2,
                             'updated_at' => now(),
                         ]);
                 }

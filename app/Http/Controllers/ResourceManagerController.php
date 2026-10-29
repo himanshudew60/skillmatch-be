@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\EmployeeRecommendationService;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -323,12 +323,11 @@ public function updateEmployeeStatus(Request $request, $id)
         ]);
     }
 
-    public function aiRecommendations(
-    $id,
-    EmployeeRecommendationService $aiService
-) {
+ 
+public function aiRecommendations($id)
+{
     try {
-        // $id is project_requirements.id
+        // 1. Get project requirement details.
         $project = DB::table('project_requirements as pr')
             ->join('projects as p', 'p.id', '=', 'pr.project_id')
             ->where('pr.id', $id)
@@ -358,11 +357,8 @@ public function updateEmployeeStatus(Request $request, $id)
             ], 404);
         }
 
-        /*
-         * Build normalized project skill requirements.
-         * Skill names come from the skills table.
-         */
-        $skillRequirements = [
+        // 2. Get the project-required skills and their names.
+        $skillSlots = [
             [
                 'skill_type' => 'Primary',
                 'skill_id' => $project->primary_skill_id,
@@ -382,14 +378,13 @@ public function updateEmployeeStatus(Request $request, $id)
 
         $requiredSkills = [];
 
-        foreach ($skillRequirements as $requirement) {
-            // Ignore skill slots that are not configured.
-            if (empty($requirement['skill_id'])) {
+        foreach ($skillSlots as $slot) {
+            if (empty($slot['skill_id'])) {
                 continue;
             }
 
             $skill = DB::table('skills')
-                ->where('id', $requirement['skill_id'])
+                ->where('id', $slot['skill_id'])
                 ->where('bit_delete', 0)
                 ->select('id', 'name', 'category')
                 ->first();
@@ -402,15 +397,14 @@ public function updateEmployeeStatus(Request $request, $id)
                 'skill_id' => (int) $skill->id,
                 'skill_name' => $skill->name,
                 'category' => $skill->category,
-                'skill_type' => $requirement['skill_type'],
+                'skill_type' => $slot['skill_type'],
                 'required_proficiency' =>
-                    $requirement['required_proficiency'] !== null
-                        ? (float) $requirement['required_proficiency']
+                    $slot['required_proficiency'] !== null
+                        ? (float) $slot['required_proficiency']
                         : null,
             ];
         }
 
-        // Return a project object with normalized skill requirements.
         $projectData = [
             'requirement_id' => (int) $project->requirement_id,
             'project_id' => (int) $project->project_id,
@@ -423,15 +417,11 @@ public function updateEmployeeStatus(Request $request, $id)
             'required_skills' => $requiredSkills,
         ];
 
-        /*
-         * getEligibleEmployees() already filters employees:
-         * - at least one active employee skill
-         * - latest L&K assessment for every active skill is Approved
-         */
+        // 3. Get only employees who pass your existing L&K eligibility filter.
         $employees = $this->getEligibleEmployees()
             ->map(function ($employee) {
-                $employeeData = (array) $employee;
-                $employeeData['skills'] = [];
+                $data = (array) $employee;
+                $data['skills'] = [];
 
                 foreach ($employee->skills as $skill) {
                     $skillData = (array) $skill;
@@ -440,32 +430,231 @@ public function updateEmployeeStatus(Request $request, $id)
                         ? (array) $skill->lk_assessment
                         : null;
 
-                    $employeeData['skills'][] = $skillData;
+                    $data['skills'][] = $skillData;
                 }
 
-                return $employeeData;
+                return $data;
             })
             ->values()
             ->all();
 
-        /*
-         * The AI service receives the actual project requirements
-         * and only the L&K-eligible employees.
-         */
-        $aiResult = $aiService->recommend(
-            $employees,
-            $projectData
+        if (empty($requiredSkills)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No valid project skills are configured.',
+            ], 422);
+        }
+
+        if (empty($employees)) {
+            return response()->json([
+                'success' => true,
+                'project' => $projectData,
+                'required_skills' => $requiredSkills,
+                'total_required_skills' => count($requiredSkills),
+                'total_eligible_employees' => 0,
+                'eligible_employees' => [],
+                'ai' => [
+                    'summary' => 'No eligible employees were found.',
+                    'recommendations' => [],
+                ],
+            ]);
+        }
+
+        // 4. Send project requirements and eligible employees directly to Groq.
+        $apiKey = config('services.groq.key');
+        $model = config('services.groq.model', 'openai/gpt-oss-20b');
+
+        if (empty($apiKey)) {
+            throw new \RuntimeException(
+                'Groq API key is missing. Configure GROQ_API_KEY in .env.'
+            );
+        }
+
+        $promptData = [
+            'project' => $projectData,
+            'eligible_employees' => $employees,
+        ];
+
+        $systemPrompt = <<<'PROMPT'
+You are an expert IT resource manager.
+
+Your task is to match eligible employees to the supplied project requirement.
+
+Use only the project and employee data provided in the user message.
+Do not invent skills, proficiency levels, assessment results, experience,
+availability, or other employee facts.
+
+Compare each employee against every required project skill. Consider:
+- Required skill coverage.
+- Employee proficiency compared with the required proficiency.
+- Latest L&K assessment decision and L&K proficiency.
+- Relevant experience and project experience when provided.
+- Employee availability and project dates when provided.
+
+An employee's recorded proficiency alone does not prove L&K approval.
+Do not describe a skill as L&K-approved unless its latest assessment decision
+is Approved. Flag missing assessment information for human review.
+
+Return valid JSON only, with this structure:
+{
+  "summary": "Brief project-level recommendation",
+  "recommendations": [
+    {
+      "employee_id": 1,
+      "rank": 1,
+      "overall_match_percentage": 90,
+      "rating": "Excellent Match",
+      "recommendation": "Recommended",
+      "reason": "Evidence-based explanation",
+      "matched_skills": [
+        {
+          "skill_id": 1,
+          "skill_name": "Example",
+          "employee_proficiency": 4,
+          "lk_proficiency": 4,
+          "required_proficiency": 3,
+          "assessment_decision": "Approved",
+          "status": "Requirement met"
+        }
+      ],
+      "upskill_needed": true,
+      "upskill_skills": [
+        {
+          "skill_id": 2,
+          "skill_name": "Example skill",
+          "current_proficiency": 2,
+          "lk_proficiency": 2,
+          "required_proficiency": 4,
+          "reason": "Below required proficiency"
+        }
+      ],
+      "review_required": false
+    }
+  ]
+}
+
+Rules:
+- Return one recommendation for every supplied eligible employee.
+- Sort recommendations from best match to lowest match.
+- Use each real employee_id from the supplied data.
+- Match percentage must be an integer from 0 to 100, based on evidence.
+- Ratings must be one of: Excellent Match, Strong Match, Partial Match, Low Match.
+- Set upskill_needed to true when a required skill is missing or its recorded
+  proficiency is below target. Include only skills needing upskilling in
+  upskill_skills.
+- If an assessment is missing, unapproved, or lacks L&K proficiency, flag
+  review_required and explain the uncertainty. Do not claim approval.
+- Do not recommend automatic allocation. A human manager makes the decision.
+- Return {"summary":"...","recommendations":[]} if there are no candidates.
+PROMPT;
+
+        $groqResponse = Http::timeout(60)
+            ->withToken($apiKey)
+            ->acceptJson()
+            ->post(
+                'https://api.groq.com/openai/v1/chat/completions',
+                [
+                    'model' => $model,
+                    'messages' => [
+                        [
+                            'role' => 'system',
+                            'content' => $systemPrompt,
+                        ],
+                        [
+                            'role' => 'user',
+                            'content' => json_encode(
+                                $promptData,
+                                JSON_UNESCAPED_UNICODE |
+                                JSON_UNESCAPED_SLASHES
+                            ),
+                        ],
+                    ],
+                    'temperature' => 0.2,
+                    'max_completion_tokens' => 6000,
+                    'response_format' => [
+                        'type' => 'json_object',
+                    ],
+                ]
+            );
+
+        if (!$groqResponse->successful()) {
+            Log::error('Groq resource recommendation request failed', [
+                'status' => $groqResponse->status(),
+                'response' => $groqResponse->json(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Groq could not generate recommendations. Please try again.',
+            ], 502);
+        }
+
+        $content = $groqResponse->json('choices.0.message.content');
+
+        if (!is_string($content) || trim($content) === '') {
+            throw new \RuntimeException(
+                'Groq returned an empty recommendation response.'
+            );
+        }
+
+        $aiData = json_decode($content, true);
+
+        if (
+            !is_array($aiData) ||
+            !isset($aiData['recommendations']) ||
+            !is_array($aiData['recommendations'])
+        ) {
+            throw new \RuntimeException(
+                'Groq returned invalid recommendation JSON.'
+            );
+        }
+
+        // 5. Validate returned employee IDs against the eligible employee list.
+        $eligibleIds = array_map(
+            fn ($employee) => (int) $employee['employee_id'],
+            $employees
         );
 
+        $aiData['recommendations'] = collect($aiData['recommendations'])
+            ->filter(function ($item) use ($eligibleIds) {
+                return isset($item['employee_id']) &&
+                    in_array((int) $item['employee_id'], $eligibleIds, true);
+            })
+            ->map(function ($item) {
+                $item['employee_id'] = (int) $item['employee_id'];
+                $item['overall_match_percentage'] = max(
+                    0,
+                    min(100, (int) ($item['overall_match_percentage'] ?? 0))
+                );
+                $item['upskill_needed'] = (bool) (
+                    $item['upskill_needed'] ?? false
+                );
+                $item['upskill_skills'] = is_array(
+                    $item['upskill_skills'] ?? null
+                ) ? $item['upskill_skills'] : [];
+
+                return $item;
+            })
+            ->sortByDesc('overall_match_percentage')
+            ->values()
+            ->map(function ($item, $index) {
+                $item['rank'] = $index + 1;
+                return $item;
+            })
+            ->all();
+
+        // Return project data, employees and AI analysis to Angular.
         return response()->json([
             'success' => true,
             'project' => $projectData,
-            'resource_need' => $projectData['required_resources'],
             'required_skills' => $requiredSkills,
             'total_required_skills' => count($requiredSkills),
             'total_eligible_employees' => count($employees),
             'eligible_employees' => $employees,
-            'ai' => $aiResult,
+            'ai' => [
+                'summary' => $aiData['summary'] ?? '',
+                'recommendations' => $aiData['recommendations'],
+            ],
         ]);
     } catch (\Throwable $e) {
         Log::error('AI recommendations failed', [
@@ -479,6 +668,7 @@ public function updateEmployeeStatus(Request $request, $id)
         ], 500);
     }
 }
+
 
  public function reviedByManager(){
     

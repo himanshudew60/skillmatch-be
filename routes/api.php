@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AIController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectAllocationController;
 use App\Http\Controllers\AuthController;
@@ -161,15 +162,19 @@ Route::get(
         [ResourceManagerController::class, 'recommendations']
     );
 
-    Route::post(
-        '/resource-manager/requirements/{id}/ai-recommendations',
-        [ResourceManagerController::class, 'aiRecommendations']
-    );
+    // Route::post(
+    //     '/resource-manager/requirements/{id}/ai-recommendations',
+    //     [ResourceManagerController::class, 'aiRecommendations']
+    // );
     Route::post(
         '/resource-manager/reviedByManager/{id}',
         [ResourceManagerController::class, 'reviedByManager']
     );
 
+Route::get(
+    '/resource-manager/ai-recommendations/{id}',
+    [ResourceManagerController::class, 'aiRecommendations']
+);
 
     
     // =============================================
@@ -224,4 +229,8 @@ Route::post(
     [ProjectAllocationController::class, 'storeBulk']
 );
 
+
+// ai COntorller
+Route::get('/ai/overview', [AIController::class, 'overview']);
+Route::post('/ai/chat', [AIController::class, 'chat']);
 });
