@@ -107,10 +107,29 @@ class EmployeeRecommendationService
         ];
     }
 
-    private function calculateSkillMatch(array $skills, array $project): array
-    {
-        $requirements = [];
+    
+private function calculateSkillMatch(array $skills, array $project): array
+{
+    $requirements = [];
 
+    // Prefer the normalized project skill requirements.
+    foreach (($project['required_skills'] ?? []) as $requiredSkill) {
+        if (empty($requiredSkill['skill_id'])) {
+            continue;
+        }
+
+        $requirements[] = [
+            'skill_id' => (int) $requiredSkill['skill_id'],
+            'skill_name' => $requiredSkill['skill_name']
+                ?? ('Skill ID ' . $requiredSkill['skill_id']),
+            'proficiency' => (float) (
+                $requiredSkill['required_proficiency'] ?? 0
+            ),
+        ];
+    }
+
+    // Backward compatibility with the legacy project schema.
+    if (empty($requirements)) {
         foreach (['primary', 'secondary', 'tertiary'] as $type) {
             $skillId = $project[$type . '_skill_id'] ?? null;
 
@@ -120,108 +139,136 @@ class EmployeeRecommendationService
 
             $requirements[] = [
                 'skill_id' => (int) $skillId,
+                'skill_name' => 'Skill ID ' . $skillId,
                 'proficiency' => (float) (
                     $project[$type . '_proficiency'] ?? 0
                 ),
             ];
         }
+    }
 
-        if (empty($requirements)) {
-            return [
-                'overall' => 0,
-                'skill' => 0,
-                'proficiency' => 0,
-                'experience' => 0,
-                'lk_evidence' => 0,
-                'availability' => 0,
-                'strengths' => [],
-                'gaps' => [
-                    'No project skill requirements were supplied; a project-specific match cannot be calculated.',
-                ],
-            ];
-        }
-
-        $matched = 0;
-        $proficiencyTotal = 0;
-        $lkTotal = 0;
-        $strengths = [];
-        $gaps = [];
-
-        foreach ($requirements as $requirement) {
-            $employeeSkill = collect($skills)->first(
-                fn ($skill) =>
-                    (int) $skill['skill_id'] === $requirement['skill_id']
-            );
-
-            if (!$employeeSkill) {
-                $gaps[] = 'A required skill is missing from the employee profile.';
-                continue;
-            }
-
-            $matched++;
-
-            $employeeProficiency = (float) (
-                $employeeSkill['employee_proficiency'] ?? 0
-            );
-
-            $lkProficiency = (float) (
-                $employeeSkill['lk_assessment']['lk_proficiency'] ?? 0
-            );
-
-            $requiredProficiency = $requirement['proficiency'];
-
-            $proficiencyTotal += $requiredProficiency > 0
-                ? min(100, ($employeeProficiency / $requiredProficiency) * 100)
-                : 100;
-
-            $lkTotal += $requiredProficiency > 0
-                ? min(100, ($lkProficiency / $requiredProficiency) * 100)
-                : 100;
-
-            if ($employeeProficiency >= $requiredProficiency) {
-                $strengths[] = $employeeSkill['skill_name'] .
-                    ' meets the required employee proficiency.';
-            } else {
-                $gaps[] = $employeeSkill['skill_name'] .
-                    ' is below the requested employee proficiency.';
-            }
-        }
-
-        $skillPercentage = ($matched / count($requirements)) * 100;
-        $proficiencyPercentage = $proficiencyTotal / count($requirements);
-        $lkPercentage = $lkTotal / count($requirements);
-
-        $experiencePercentage = $this->experiencePercentage(
-            $skills,
-            $requirements
-        );
-
-        // Status is only a match signal when the backend knows the
-        // employee's availability against the project dates.
-        $availabilityPercentage = 0;
-        $gaps[] = 'Availability and project dates must be verified.';
-
-        // FRD weights: coverage 40%, proficiency 25%, experience 15%,
-        // assessment evidence 10%, availability 10%.
-        $overall = (
-            $skillPercentage * 0.40
-            + $proficiencyPercentage * 0.25
-            + $experiencePercentage * 0.15
-            + $lkPercentage * 0.10
-            + $availabilityPercentage * 0.10
-        );
-
+    if (empty($requirements)) {
         return [
-            'overall' => (int) round($overall),
-            'skill' => (int) round($skillPercentage),
-            'proficiency' => (int) round($proficiencyPercentage),
-            'experience' => (int) round($experiencePercentage),
-            'lk_evidence' => (int) round($lkPercentage),
-            'availability' => $availabilityPercentage,
-            'strengths' => array_values(array_unique($strengths)),
-            'gaps' => array_values(array_unique($gaps)),
+            'overall' => 0,
+            'skill' => 0,
+            'proficiency' => 0,
+            'experience' => 0,
+            'lk_evidence' => 0,
+            'availability' => 0,
+            'strengths' => [],
+            'gaps' => [
+                'No project skill requirements were supplied. Check the project requirement API.',
+            ],
         ];
     }
+
+    $matched = 0;
+    $proficiencyTotal = 0;
+    $lkTotal = 0;
+    $strengths = [];
+    $gaps = [];
+    $requirementCount = count($requirements);
+
+    foreach ($requirements as $requirement) {
+        $employeeSkill = collect($skills)->first(
+            fn ($skill) =>
+                (int) ($skill['skill_id'] ?? 0)
+                === $requirement['skill_id']
+        );
+
+        $skillName = $requirement['skill_name'];
+        $target = $requirement['proficiency'];
+
+        if (!$employeeSkill) {
+            $gaps[] = "Missing required skill: {$skillName}.";
+
+            // Missing skills contribute zero to both proficiency metrics.
+            continue;
+        }
+
+        $matched++;
+
+        $employeeProficiency = (float) (
+            $employeeSkill['employee_proficiency'] ?? 0
+        );
+
+        $lkProficiency = $employeeSkill['lk_assessment']['lk_proficiency']
+            ?? $employeeSkill['verified_proficiency']
+            ?? null;
+
+        // If the project has no target, don't invent a proficiency gap.
+        if ($target <= 0) {
+            $proficiencyTotal += 100;
+            $lkTotal += $lkProficiency !== null ? 100 : 0;
+
+            $strengths[] = "{$skillName} is recorded in the employee profile.";
+
+            if ($lkProficiency === null) {
+                $gaps[] = "L&K proficiency evidence is unavailable for {$skillName}.";
+            }
+
+            continue;
+        }
+
+        $employeePercentage = min(
+            100,
+            max(0, ($employeeProficiency / $target) * 100)
+        );
+
+        $lkPercentage = $lkProficiency !== null
+            ? min(100, max(0, ((float) $lkProficiency / $target) * 100))
+            : 0;
+
+        $proficiencyTotal += $employeePercentage;
+        $lkTotal += $lkPercentage;
+
+        $employeeMeetsTarget = $employeeProficiency >= $target;
+        $lkMeetsTarget = $lkProficiency !== null
+            && (float) $lkProficiency >= $target;
+
+        if ($employeeMeetsTarget && $lkMeetsTarget) {
+            $strengths[] =
+                "{$skillName} meets the employee and L&K proficiency targets.";
+        } else {
+            $gaps[] = sprintf(
+                '%s: required %.1f/5, employee %.1f/5, L&K %s.',
+                $skillName,
+                $target,
+                $employeeProficiency,
+                $lkProficiency !== null
+                    ? number_format((float) $lkProficiency, 1) . '/5'
+                    : 'not assessed'
+            );
+        }
+    }
+
+    $skillPercentage = ($matched / $requirementCount) * 100;
+    $proficiencyPercentage = $proficiencyTotal / $requirementCount;
+    $lkPercentage = $lkTotal / $requirementCount;
+
+    // Experience and availability have no configured targets yet.
+    // Calculate the overall score from the assessed weights only:
+    // skill coverage 40%, employee proficiency 25%, L&K evidence 10%.
+    $assessedWeight = 0.40 + 0.25 + 0.10;
+
+    $overall = (
+        $skillPercentage * 0.40
+        + $proficiencyPercentage * 0.25
+        + $lkPercentage * 0.10
+    ) / $assessedWeight;
+
+    return [
+        'overall' => (int) round($overall),
+        'skill' => (int) round($skillPercentage),
+        'proficiency' => (int) round($proficiencyPercentage),
+        'experience' => 0,
+        'lk_evidence' => (int) round($lkPercentage),
+        'availability' => 0,
+        'strengths' => array_values(array_unique($strengths)),
+        'gaps' => array_values(array_unique($gaps)),
+    ];
+}
+
 
     private function experiencePercentage(
         array $skills,

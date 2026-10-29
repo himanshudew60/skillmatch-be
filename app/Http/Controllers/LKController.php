@@ -20,7 +20,9 @@ class LKController extends Controller
     $query = DB::table('employees as e')
         ->leftJoin('departments as d', 'd.id', '=', 'e.department_id')
         ->leftJoin('designations as des', 'des.id', '=', 'e.designation_id')
+        
         ->where('e.bit_delete', 0)
+        ->where('e.status', 1)
 
         // Show employees who still have at least one skill to review.
         ->whereExists(function ($query) {
@@ -262,6 +264,21 @@ class LKController extends Controller
                     'updated_at' =>
                         now(),
                 ]);
+                if ($skill['decision'] === 'Approved') {
+    DB::table('employees')
+        ->where('id', $validated['employee_id'])
+        ->update([
+            'status' => 2,
+            'updated_at' => now(),
+        ]);
+} elseif ($skill['decision'] === 'Upskill Required') {
+    DB::table('employees')
+        ->where('id', $validated['employee_id'])
+        ->update([
+            'status' => 3,
+            'updated_at' => now(),
+        ]);
+}
 if ($skill['decision'] === 'Approved') {
     DB::table('skill_gap_requests')
         ->where('employee_id', $validated['employee_id'])
@@ -476,6 +493,13 @@ public function sendToUpskill(Request $request)
                     'updated_at' => now(),
                 ]);
             }
+            // Update employee workflow status to L&K Upskill Required.
+DB::table('employees')
+    ->where('id', $employeeId)
+    ->update([
+        'status' => 3,
+        'updated_at' => now(),
+    ]);
         });
 
         return response()->json([
@@ -778,7 +802,13 @@ public function sendToUpskill(Request $request)
                     'updated_at' =>
                         now(),
                 ]);
-
+// Reset employee status to 1 (Draft).
+DB::table('employees')
+    ->where('id', $gapRequest->employee_id)
+    ->update([
+        'status' => 1,
+        'updated_at' => now(),
+    ]);
             DB::commit();
 
             return response()->json([

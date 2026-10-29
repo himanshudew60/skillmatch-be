@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProjectAllocationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
@@ -26,7 +28,7 @@ Route::post('/login', [AuthController::class, 'login'])
 // =========================================================
 
 Route::middleware('jwt')->group(function () {
-
+  Route::get('/dashboard', [DashboardController::class, 'index']);
     // ---------------------------------------------
     // Authentication
     // ---------------------------------------------
@@ -145,10 +147,14 @@ Route::post('/lk/upskill-requests/{id}/assessment', [
     'submitUpskillAssessment'
 ]);
 
-
+// resource manger
 Route::post(
     '/resource-manager/upskill-requests',
     [ResourceManagerController::class, 'sendUpskillRequest']
+);
+Route::put(
+    '/employees/{id}/status',
+    [ResourceManagerController::class, 'updateEmployeeStatus']
 );
 Route::get(
         '/resource-manager/requirements/{id}/recommendations',
@@ -163,4 +169,59 @@ Route::get(
         '/resource-manager/reviedByManager/{id}',
         [ResourceManagerController::class, 'reviedByManager']
     );
+
+
+    
+    // =============================================
+    // Project Allocations
+    // =============================================
+
+Route::get(
+    '/project-allocations',
+    [ProjectAllocationController::class, 'index']
+);
+
+Route::get(
+    '/project-allocations/eligible-employees',
+    [ProjectAllocationController::class, 'eligibleEmployees']
+);
+
+Route::get(
+    '/projects/{projectId}/allocations',
+    [ProjectAllocationController::class, 'projectAllocations']
+);
+
+Route::post(
+    '/project-allocations',
+    [ProjectAllocationController::class, 'store']
+);
+
+Route::get(
+    '/project-allocations/{id}',
+    [ProjectAllocationController::class, 'show']
+);
+
+Route::put(
+    '/project-allocations/{id}',
+    [ProjectAllocationController::class, 'update']
+);
+
+Route::delete(
+    '/project-allocations/{id}',
+    [ProjectAllocationController::class, 'destroy']
+);
+Route::put(
+    '/projects/{projectId}/allocations/bulk-update',
+    [ProjectAllocationController::class, 'bulkUpdate']
+);
+
+Route::post(
+    '/projects/{projectId}/allocations/bulk-release',
+    [ProjectAllocationController::class, 'bulkRelease']
+);
+Route::post(
+    '/project-allocations/bulk',
+    [ProjectAllocationController::class, 'storeBulk']
+);
+
 });

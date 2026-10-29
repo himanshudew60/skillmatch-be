@@ -17,6 +17,7 @@ class ResourceManagerController extends Controller
             ->leftJoin('departments as d', 'd.id', '=', 'e.department_id')
             ->leftJoin('designations as des', 'des.id', '=', 'e.designation_id')
             ->where('e.bit_delete', 0)
+            ->where('e.status', 2)
             
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
@@ -239,9 +240,16 @@ public function sendUpskillRequest(Request $request)
                         'updated_at' => now(),
                     ]);
             }
+            DB::table('employees')
+    ->where('id', $employeeId)
+    ->update([
+        'status' => 3,
+        'updated_at' => now(),
+    ]);
 
             return $requestIds;
         });
+        
 
         return response()->json([
             'success' => true,
@@ -272,7 +280,38 @@ public function sendUpskillRequest(Request $request)
     }
 }
 
+public function updateEmployeeStatus(Request $request, $id)
+{
+    $validated = $request->validate([
+        'status' => 'required|integer|in:4',
+    ]);
 
+    $employee = DB::table('employees')
+        ->where('id', $id)
+        ->where('bit_delete', 0)
+        ->first();
+
+    if (!$employee) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Employee not found.',
+        ], 404);
+    }
+
+    DB::table('employees')
+        ->where('id', $id)
+        ->update([
+            'status' => $validated['status'],
+            'updated_at' => now(),
+        ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Employee status updated to Resource Manager Reviewed.',
+        'employee_id' => (int) $id,
+        'status' => 4,
+    ]);
+}
     public function recommendations($id)
     {
         $employees = $this->getEligibleEmployees();

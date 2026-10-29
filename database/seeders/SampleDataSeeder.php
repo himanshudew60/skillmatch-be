@@ -262,6 +262,7 @@ class SampleDataSeeder extends Seeder
                 'emp_code' => 'EMP001',
                 'emp_name' => 'Rahul Sharma',
                 'emp_email' => 'rahul.sharma@example.com',
+                'status' => 1,
                 'department_id' => 1,
                 'designation_id' => 3,
                 'location' => 'Ahmedabad',
@@ -276,6 +277,7 @@ class SampleDataSeeder extends Seeder
                 'emp_code' => 'EMP002',
                 'emp_name' => 'Priya Patel',
                 'emp_email' => 'priya.patel@example.com',
+                'status' => 1,
                 'department_id' => 1,
                 'designation_id' => 2,
                 'location' => 'Ahmedabad',
@@ -290,6 +292,7 @@ class SampleDataSeeder extends Seeder
                 'emp_code' => 'EMP003',
                 'emp_name' => 'Amit Shah',
                 'emp_email' => 'amit.shah@example.com',
+                'status' => 1,
                 'department_id' => 1,
                 'designation_id' => 1,
                 'location' => 'Ahmedabad',
@@ -304,6 +307,7 @@ class SampleDataSeeder extends Seeder
                 'emp_code' => 'EMP004',
                 'emp_name' => 'Neha Mehta',
                 'emp_email' => 'neha.mehta@example.com',
+                'status' => 1,
                 'department_id' => 1,
                 'designation_id' => 1,
                 'location' => 'Pune',
@@ -318,6 +322,7 @@ class SampleDataSeeder extends Seeder
                 'emp_code' => 'EMP005',
                 'emp_name' => 'Vikram Joshi',
                 'emp_email' => 'vikram.joshi@example.com',
+                'status' => 1,
                 'department_id' => 1,
                 'designation_id' => 2,
                 'location' => 'Mumbai',
@@ -332,6 +337,7 @@ class SampleDataSeeder extends Seeder
                 'emp_code' => 'EMP006',
                 'emp_name' => 'Sneha Desai',
                 'emp_email' => 'sneha.desai@example.com',
+                'status' => 1,
                 'department_id' => 1,
                 'designation_id' => 1,
                 'location' => 'Ahmedabad',
@@ -346,6 +352,7 @@ class SampleDataSeeder extends Seeder
                 'emp_code' => 'EMP007',
                 'emp_name' => 'Arjun Mehta',
                 'emp_email' => 'arjun.mehta@example.com',
+                'status' => 1,
                 'department_id' => 4,
                 'designation_id' => 4,
                 'location' => 'Ahmedabad',
@@ -360,6 +367,7 @@ class SampleDataSeeder extends Seeder
                 'emp_code' => 'EMP008',
                 'emp_name' => 'Kavita Rao',
                 'emp_email' => 'kavita.rao@example.com',
+                'status' => 1,
                 'department_id' => 4,
                 'designation_id' => 5,
                 'location' => 'Bangalore',
@@ -408,6 +416,7 @@ DB::table('employee_skills')->insert([
         'certification' => 'PHP Certified Developer',
         'project_experience' => 54,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -421,6 +430,7 @@ DB::table('employee_skills')->insert([
         'certification' => 'Laravel Certification',
         'project_experience' => 42,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -434,6 +444,7 @@ DB::table('employee_skills')->insert([
         'certification' => null,
         'project_experience' => 30,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -449,6 +460,7 @@ DB::table('employee_skills')->insert([
         'certification' => 'Angular Certification',
         'project_experience' => 48,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -462,6 +474,7 @@ DB::table('employee_skills')->insert([
         'certification' => null,
         'project_experience' => 42,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -475,6 +488,7 @@ DB::table('employee_skills')->insert([
         'certification' => null,
         'project_experience' => 40,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -490,6 +504,7 @@ DB::table('employee_skills')->insert([
         'certification' => null,
         'project_experience' => 42,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -503,6 +518,7 @@ DB::table('employee_skills')->insert([
         'certification' => null,
         'project_experience' => 30,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -516,6 +532,7 @@ DB::table('employee_skills')->insert([
         'certification' => null,
         'project_experience' => 36,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -531,6 +548,7 @@ DB::table('employee_skills')->insert([
         'certification' => 'PHP Certified Developer',
         'project_experience' => 60,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -544,6 +562,7 @@ DB::table('employee_skills')->insert([
         'certification' => 'MySQL Certification',
         'project_experience' => 54,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -557,6 +576,7 @@ DB::table('employee_skills')->insert([
         'certification' => null,
         'project_experience' => 42,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -572,6 +592,7 @@ DB::table('employee_skills')->insert([
         'certification' => 'Laravel Certification',
         'project_experience' => 60,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -585,6 +606,7 @@ DB::table('employee_skills')->insert([
         'certification' => null,
         'project_experience' => 54,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -598,6 +620,7 @@ DB::table('employee_skills')->insert([
         'certification' => null,
         'project_experience' => 42,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -613,6 +636,7 @@ DB::table('employee_skills')->insert([
         'certification' => null,
         'project_experience' => 36,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -626,6 +650,7 @@ DB::table('employee_skills')->insert([
         'certification' => null,
         'project_experience' => 30,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
@@ -639,6 +664,7 @@ DB::table('employee_skills')->insert([
         'certification' => null,
         'project_experience' => 24,
         'skill_validation_status' => 'Self',
+        
         'bit_delete' => 0,
         'created_at' => now(),
         'updated_at' => now(),
